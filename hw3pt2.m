@@ -1,168 +1,142 @@
-clear all; close all; clc
+close all; clear all; clc;
 
-cam_num = 4; % for convenience of making plots
+% setup/get data from matrix
+load('cam1_4.mat');
+load('cam2_4.mat');
+load('cam3_4.mat');
+vidFrames1_1 = vidFrames1_4;
+vidFrames2_1 = vidFrames2_4;
+vidFrames3_1 = vidFrames3_4;
 
-cropsize11 = [300 160 110 240];
-cropsize12 = [230 70 150 310];
-cropsize13 = [120 280 130 220];
-cropsize21 = [280 220 150 200];
-cropsize22 = [180 60 220 340];
-cropsize23 = [150 280 150 220];
-cropsize31 = [260 230 140 170];
-cropsize32 = [220 150 280 300];
-cropsize33 = [150 280 170 220];
-cropsize41 = [300 250 90 200];
-cropsize42 = [200 100 270 260];
-cropsize43 = [180 320 170 200];
+[m1,n1] = size(vidFrames1_1(:,:,1,1));
+[m2,n2] = size(vidFrames2_1(:,:,1,1));
+[m3,n3] = size(vidFrames3_1(:,:,1,1));
 
-% load data
-if cam_num == 1
-    load('cam1_1.mat');
-    load('cam2_1.mat');
-    load('cam3_1.mat');
-    v1 = vidFrames1_1; v2 = vidFrames2_1; v3 = vidFrames3_1;
-    clear vidFrames1_1 vidFrames2_1 vidFrames3_1;
-    cropsize1 = cropsize11; cropsize2 = cropsize12; cropsize3 = cropsize13;
-elseif cam_num == 2
-    load('cam1_2.mat');
-    load('cam2_2.mat');
-    load('cam3_2.mat');
-    v1 = vidFrames1_2; v2 = vidFrames2_2; v3 = vidFrames3_2;
-    clear vidFrames1_2 vidFrames2_2 vidFrames3_2;
-    cropsize1 = cropsize21; cropsize2 = cropsize22; cropsize3 = cropsize23;
-elseif cam_num == 3
-    load('cam1_3.mat');
-    load('cam2_3.mat');
-    load('cam3_3.mat');
-    v1 = vidFrames1_3; v2 = vidFrames2_3; v3 = vidFrames3_3;
-    clear vidFrames1_3 vidFrames2_3 vidFrames3_3;
-    cropsize1 = cropsize31; cropsize2 = cropsize32; cropsize3 = cropsize33;
-else
-    load('cam1_4.mat');
-    load('cam2_4.mat');
-    load('cam3_4.mat');
-    v1 = vidFrames1_4; v2 = vidFrames2_4; v3 = vidFrames3_4;
-    clear vidFrames1_4 vidFrames2_4 vidFrames3_4;
-    cropsize1 = cropsize41; cropsize2 = cropsize42; cropsize3 = cropsize43;
+numFrames1=size(vidFrames1_1,4);
+numFrames2=size(vidFrames2_1,4);
+numFrames3=size(vidFrames3_1,4);
+maxFrames = max([numFrames1 numFrames2 numFrames3]);
+
+for k = 1:maxFrames
+    if k <= numFrames1
+        mov1(k).cdata = vidFrames1_1(:,:,:,k);
+        mov1(k).colormap = [];
+        
+    end
+    if k <= numFrames2
+        mov2(k).cdata = vidFrames2_1(:,:,:,k);
+        mov2(k).colormap = [];
+    end
+    if k <= numFrames3
+         mov3(k).cdata = vidFrames3_1(:,:,:,k);
+         mov3(k).colormap = [];
+    end  
 end
 
+X1 = []; X2 = []; X3 = [];
+Y1 = []; Y2 = []; Y3 = [];
+for jj = 1:maxFrames
+    
+    if jj <= numFrames1
+        X=frame2im(mov1(jj));
+        a = rgb2gray(X);
+        Vid1org(:,:,jj) = a;
+        a(:,1:290) = 0; a(:,350:end) = 0;
+        a(1:200,:) = 0;
+        Vid1(:,:,jj) =  a;
+        [Max Ind] = max(a(:));
+        [x1 y1] = ind2sub(size(a), Ind);
+        X1 = [X1 x1]; Y1 = [Y1 y1];
+    end
+    
+    if jj <= numFrames2
+        X=frame2im(mov2(jj));
+        a = rgb2gray(X);
+        Vid2org(:,:,jj) = a;
+        a(:,1:230) = 0; a(:,350:end) = 0;
+        Vid2(:,:,jj) =  a;
+        [Max Ind] = max(a(:));
+        [x2 y2] = ind2sub(size(a), Ind);
+        X2 = [X2 x2]; Y2 = [Y2 y2];
+    end 
+ 
+    if jj <= numFrames3
+        X=frame2im(mov3(jj));
+        a = rgb2gray(X);
+        Vid3org(:,:,jj) = a;
+        a(1:200,:) = 0; a(300:end,:) = 0;
+        a(:, 1:260) = 0;
+        Vid3(:,:,jj) =  a; 
+        [Max Ind] = max(a(:));
+        [x3 y3] = ind2sub(size(a), Ind);
+        X3 = [X3 x3]; Y3 = [Y3 y3];
+    end
 
-
-%% Analysis on frame data
-
-% number of frames
-nf1 = size(v1,4);
-
-% crop video and convert to RGB
-for j=nf1:-1:1
-    cropped(:,:,:,j) = imcrop(v1(:,:,:,j), cropsize1);
-    grayscale(:,:,:,j) = rgb2gray(cropped(:,:,:,j));
 end
 
-Rave1 = zeros(nf1);
-Cave1 = zeros(nf1);
+%% 
+figure (1)
+subplot(3,2,1), plot(Y1, 'k', 'LineWidth', 1.5); 
+axis([0 200 0 640]); ylabel('Position');
+title('Camera 1 - X Position');
+subplot(3,2,2), plot(X1, 'k', 'LineWidth', 1.5); 
+axis([0 200 0 480]); 
+title('Camera 1 - Y Position');
+subplot(3,2,3), plot(X2, 'k', 'LineWidth', 1.5); 
+axis([0 200 0 480]); ylabel('Position');
+title('Camera 2 - X Position');
+subplot(3,2,4), plot(Y2, 'k', 'LineWidth', 1.5); 
+axis([0 200 0 640]); 
+title('Camera 2 - Y Position');
+subplot(3,2,5), plot(X3, 'k', 'LineWidth', 1.5); 
+axis([0 200 0 480]); ylabel('Position'); xlabel('Frame');
+title('Camera 3 - X Position');
+subplot(3,2,6), plot(Y3, 'k', 'LineWidth', 1.5); 
+axis([0 200 0 640]);  xlabel('Frame');
+title('Camera 3 - Y Position');
+hold off
 
-% track the can
-for j = 1:nf1
-    j_frame = double(grayscale(:,:,j));
-    [row_1,col_1] = find(j_frame >= 245);
-    Rave1(j)=mean(row_1);
-    Cave1(j)=mean(col_1);
-end
 
-clear cropped grayscale;
+A = [X1(1:200); Y1(1:200); X2(1:200); 
+     Y2(1:200); X3(1:200); Y3(1:200)];
 
-% number of frames
-nf2 = size(v2,4);
-for j=nf2:-1:1
-    cropped(:,:,:,j) = imcrop(v2(:,:,:,j), cropsize2);
-    grayscale(:,:,:,j) = rgb2gray(cropped(:,:,:,j));
-end
+[u s v] = svd(A);
+%%
+Asvd = u(:,1:2)*s(1:2,1:2)*v(:,1:2)';
 
-Rave2 = zeros(nf2);
-Cave2 = zeros(nf2);
-
-% track the can
-for j = 1:nf2
-    j_frame = double(grayscale(:,:,j));
-    [row_2,col_2] = find(j_frame >= 245);
-    Rave2(j)=mean(row_2);
-    Cave2(j)=mean(col_2);
-end
-
-clear cropped grayscale;
-
-% number of frames
-nf3 = size(v3,4);
-for j=nf3:-1:1
-    rot_vid(:,:,:,j) = imrotate(v3(:,:,:,j), -90);
-    cropped(:,:,:,j) = imcrop(rot_vid(:,:,:,j), cropsize3);
-    grayscale(:,:,:,j) = rgb2gray(cropped(:,:,:,j));
-end
-
+Xsvd1 = Asvd(1,:); Ysvd1 = Asvd(2,:);
+Xsvd2 = Asvd(3,:); Ysvd2 = Asvd(4,:);
+Xsvd3 = Asvd(5,:); Ysvd3 = Asvd(6,:);
 
 %%
-Rave3 = zeros(nf3);
-Cave3 = zeros(nf3);
-
-% track the can
-for j = 1:nf3
-    j_frame = double(grayscale(:,:,j));
-    [row_3,col_3] = find(j_frame >= 245);
-    Rave3(j)=mean(row_3);
-    Cave3(j)=mean(col_3);
-end
-
-clear cropped grayscale;
-
-%% plot positions
-
-axi = [0 200 0 300];
-
-figure(1);
-subplot(3,1,1)
-min_frames1=min(size(Rave1,2));
-t1=1:min_frames1;
-plot(t1, Rave1(1:min_frames1), 'k', t1 ,Cave1(1:min_frames1), 'k--')
-axis(axi); 
-title('Position vs. Time Case 4', 'FontSize', 18)
-legend('Y','X');
-
-subplot(3,1,2)
-min_frames2=min(size(Rave2,2));
-t2=1:min_frames2;
-plot(t2,Rave2(1:min_frames2),'k',t2,Cave2(1:min_frames2),'k--')
-axis(axi); 
-ylabel('Position', 'FontSize', 14)
-
-subplot(3,1,3)
-min_frames3=min(size(Rave3,2));
-t3=1:min_frames3;
-plot(t3,Rave3(1:min_frames3),'k',t3,Cave3(1:min_frames3),'k--')
-axis(axi); 
-xlabel('Frame', 'FontSize', 14)
-
-%% SVD
-data=[Rave1(1:200); Cave1(1:200); Rave2(1:200);
-Cave2(1:200); Rave3(1:200); Cave3(1:200)];
+figure (2)
+subplot(3,2,1), plot(Ysvd1, 'k', 'LineWidth', 1.5); 
+axis([0 200 0 640]); ylabel('Position');
+title('Camera 1 - X Position');
+subplot(3,2,2), plot(Xsvd1, 'k', 'LineWidth', 1.5); 
+axis([0 200 0 480]); 
+title('Camera 1 - Y Position');
+subplot(3,2,3), plot(Xsvd2, 'k', 'LineWidth', 1.5); 
+axis([0 200 0 480]); ylabel('Position');
+title('Camera 2 - X Position');
+subplot(3,2,4), plot(Ysvd2, 'k', 'LineWidth', 1.5); 
+axis([0 200 0 640]); 
+title('Camera 2 - Y Position');
+subplot(3,2,5), plot(Xsvd3, 'k', 'LineWidth', 1.5); 
+axis([0 200 0 480]); ylabel('Position'); xlabel('Frame');
+title('Camera 3 - X Position');
+subplot(3,2,6), plot(Ysvd3, 'k', 'LineWidth', 1.5); 
+axis([0 200 0 640]);  xlabel('Frame');
+title('Camera 3 - Y Position');
+hold off
+%%
+figure(3)
+plot(diag(s)*100/sum(diag(s)), 'ko--', 'MarkerSize', 10'); hold on;
+axis([1 6 0 100]); 
+xlabel('Singular Values', 'FontSize',14); 
+ylabel('% of Energy', 'FontSize',14);
+title('Singular Values (case 4)','FontSize', 18);
 
 
-% handle NaN values
-data(isnan(data))=0;
-[u, s, v] = svd(data, 'econ');
-sigma = diag(s);
-energy = sigma/sum(sigma);
 
-
-%% plot singular values
-figure(2)
-subplot(2,1,1)
-plot(energy, 'ko','LineWidth', [1.4])
-title('Singular Values Case 4', 'FontSize', 18)
-ylabel('Variance (%)', 'FontSize', 14)
-subplot(2,1,2)
-
-semilogy(energy, 'ko','LineWidth', [1.4])
-ylabel('Variance (log)', 'FontSize', 14)
-xlabel('Singular Values', 'FontSize', 14)
 
